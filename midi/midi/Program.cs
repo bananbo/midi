@@ -10,20 +10,23 @@ namespace midi
     {
         static void Main(string[] args)
         {
+            string path = Console.ReadLine();
+            byte[] bs;
             //ファイルを開く
-            System.IO.FileStream fs = new System.IO.FileStream(
-                @"C:\Users\banan\Google ドライブ\研究室\頼まれごと\ひでぽん\sunset clouds.mid",
-                System.IO.FileMode.Open,
-                System.IO.FileAccess.Read);
-            //ファイルを読み込むバイト型配列を作成する
-            byte[] bs = new byte[fs.Length];
-            //ファイルの内容をすべて読み込む
-            fs.Read(bs, 0, bs.Length);
-            //閉じる
-            fs.Close();
+            try
+            {
+                System.IO.FileStream fs = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+
+                bs = new byte[fs.Length];
+                fs.Read(bs, 0, bs.Length);
+                fs.Close();
+            }
+            catch(Exception e) { return; }
 
             Queue<byte> data = new Queue<byte>();
             foreach (var a in bs) data.Enqueue(a);
+
+            
 
             //ヘッダチャンク
             List<byte> chankType = new List<byte>();
