@@ -11,80 +11,97 @@ namespace midi
         static void Main(string[] args)
         {
             string path = Console.ReadLine();
-            byte[] bs;
-            //ファイルを開く
+            byte[] data;
+
+            //load midi file
             try
             {
                 System.IO.FileStream fs = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
-                bs = new byte[fs.Length];
-                fs.Read(bs, 0, bs.Length);
+                data = new byte[fs.Length];
+                fs.Read(data, 0, data.Length);
                 fs.Close();
             }
             catch(Exception e) { return; }
+       
+            while (true)
+            {
+                //check chank type
+                List<byte> chankType = new List<byte>();
+                for (int i = 0; i < 4; i++) chankType.Add(data[i]);
+                data = data.Skip(4).ToArray();
 
-            Queue<byte> data = new Queue<byte>();
-            foreach (var a in bs) data.Enqueue(a);
+                //data length
+                int chankLength = BitConverter.ToInt32(data.Take(4).ToArray(), 0);
+                data = data.Skip(4).ToArray();
+
+                //Console.WriteLine("チャンク長:{0}", chankLengthInt);
+
+                if (CheckSame(chankType.ToArray(), new List<byte>() { 0x4D, 0x54, 0x68, 0x64 }.ToArray())) HeaderChank();
+                else if (CheckSame(chankType.ToArray(), new List<byte>() { 0x4D, 0x54, 0x72, 0x6B }.ToArray())) TrackChank();
+                else
+                {
+                    Console.WriteLine("this is not a midi file");
+                    Console.ReadKey();
+                }
+            }
 
             
 
-            //ヘッダチャンク
-            List<byte> chankType = new List<byte>();
-            for (int i = 0; i < 4; i++) chankType.Add(data.Dequeue());
-            if (CheckSame(chankType.ToArray(), new List<byte>() { 0x4D, 0x54, 0x68, 0x64 }.ToArray())) Console.WriteLine("-ここからヘッダチャンク");
 
-            //データ長
-            byte[] chankLength = new byte[4];
-            for (int i = 0; i < chankLength.Length; i++) chankLength[i] = data.Dequeue();
-            int chankLengthInt = ToInt(chankLength);
-            Console.WriteLine("ヘッダチャンク長:{0}", chankLengthInt);
+            ////データ長
+            //byte[] chankLengh2 = new byte[4];
+            //for (int i = 0; i < chankLengh2.Length; i++) chankLengh2[i] = data.Dequeue();
+            //int chankLength2Int = ToInt(chankLengh2);
+            //Console.WriteLine("トラックチャンク長：{0}", chankLength2Int);
 
-            //フォーマット
-            byte[] format = new byte[2];
-            for (int i = 0; i < format.Length; i++) format[i] = data.Dequeue();
-            int formatInt = ToInt(format);
-            Console.WriteLine("フォーマット：{0}", formatInt);
+            //while (true)
+            //{
+            //    //デルタタイム
+            //    List<byte> deltas = new List<byte>();
+            //    while (true)
+            //    {
+            //        deltas.Add(data.Dequeue());
+            //        if (deltas.Last() < 0x80) break;
+            //    }
+            //    int delta = ToInt(deltas.ToArray());
 
-            //トラック数
-            byte[] trackCount = new byte[2];
-            for (int i = 0; i < trackCount.Length; i++) trackCount[i] = data.Dequeue();
-            Console.WriteLine("トラック数：{0}", trackCount[1]);//簡単
-
-            //時間単位
-            byte[] time = new byte[2];
-            for (int i = 0; i < time.Length; i++) time[i] = data.Dequeue();
-            int timeInt = ToInt(time);
-            if (time[0] < 0x80) Console.WriteLine("時間単位：{0}", timeInt);
-            else Console.WriteLine("時間単位：{0}", timeInt);
-
-
-            //トラックチャンク
-            List<byte> chankType2 = new List<byte>();
-            for (int i = 0; i < 4; i++) chankType2.Add(data.Dequeue());
-            if (CheckSame(chankType2.ToArray(), new List<byte>() { 0x4D, 0x54, 0x72, 0x6B }.ToArray())) Console.WriteLine("-ここからトラックチャンク");
-
-            //データ長
-            byte[] chankLengh2 = new byte[4];
-            for (int i = 0; i < chankLengh2.Length; i++) chankLengh2[i] = data.Dequeue();
-            int chankLength2Int = ToInt(chankLengh2);
-            Console.WriteLine("トラックチャンク長：{0}", chankLength2Int);
-
-            while (true)
-            {
-                //デルタタイム
-                List<byte> deltas = new List<byte>();
-                while (true)
-                {
-                    deltas.Add(data.Dequeue());
-                    if (deltas.Last() < 0x80) break;
-                }
-                int delta = ToInt(deltas.ToArray());
-
-                //イベント
-                break;
-            }
+            //    //イベント
+            //    break;
+            //}
 
             Console.ReadKey();
+        }
+
+        static void HeaderChank()
+        {
+            Console.WriteLine("-ここからヘッダチャンク");
+
+            
+
+            ////フォーマット
+            //byte[] format = new byte[2];
+            //for (int i = 0; i < format.Length; i++) format[i] = data.Dequeue();
+            //int formatInt = ToInt(format);
+            //Console.WriteLine("フォーマット：{0}", formatInt);
+
+            ////トラック数
+            //byte[] trackCount = new byte[2];
+            //for (int i = 0; i < trackCount.Length; i++) trackCount[i] = data.Dequeue();
+            //Console.WriteLine("トラック数：{0}", trackCount[1]);//簡単
+
+            ////時間単位
+            //byte[] time = new byte[2];
+            //for (int i = 0; i < time.Length; i++) time[i] = data.Dequeue();
+            //int timeInt = ToInt(time);
+            //if (time[0] < 0x80) Console.WriteLine("時間単位：{0}", timeInt);
+            //else Console.WriteLine("時間単位：{0}", timeInt);
+        }
+
+        static void TrackChank()
+        {
+            Console.WriteLine("-ここからトラックチャンク");
+
         }
 
         static bool CheckSame(byte[] check1, byte[] check2)
